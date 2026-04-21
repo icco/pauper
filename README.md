@@ -47,9 +47,9 @@ every row is a **perfect 4th** (5 semitones) above the row below it. every step 
 | Scale | 9 modes | Major |
 | Base Octave | 1–6 | 2 |
 | Amp | 0–1 | 0.8 |
-| Release | 0.1–4s | 0.5s |
+| Attack | 0.001–1s | 0.005s |
+| Release | 0.01–4s | 0.5s |
 | Cutoff | 200–8000 hz | 2000 hz |
-| Gain | 1–4 | 2 |
 
 scales: Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, Locrian, Pentatonic Major, Pentatonic Minor.
 
@@ -59,7 +59,7 @@ scales: Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, Locrian, Pentatonic 
 - [norns studies](https://monome.org/docs/norns/studies/) — grid, clock, engine, params tutorials
 - [musicutil](https://monome.org/docs/norns/reference/lib/musicutil) — scale generation and note conversion (`musicutil.NOTE_NAMES`, `musicutil.generate_scale`)
 - [pattern_time](https://monome.org/docs/norns/reference/lib/pattern_time) — free-time event recorder used for pattern capture and looping
-- [PolyPerc engine](https://monome.org/docs/norns/reference/engine) — built-in polyphonic pulse/filter synth
+- [PolySub engine](https://monome.org/docs/norns/reference/engine) — built-in polyphonic subtractive synth with ADSR sustain
 - [norns tutorial thread](https://llllllll.co/t/norns-tutorial/23241) — community scripting guide
 
 ## license
