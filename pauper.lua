@@ -12,7 +12,7 @@
 -- enc2: scale
 -- enc3: base octave
 
-engine.name = "PolyPerc"
+engine.name = "PolySub"
 
 local musicutil = require("musicutil")
 local pattern_time = require("lib/pattern_time")
@@ -114,9 +114,9 @@ local function grid_redraw()
       if state.held[grid_key(x, y)] then
         level = 15
       elseif nc == root_class then
-        level = 4
+        level = 10
       elseif scale_classes[nc] then
-        level = 2
+        level = 5
       else
         level = 0
       end
@@ -131,7 +131,12 @@ end
 -- ---------------------------------------------------------------------------
 
 local function on_playback_event(event)
-  engine.hz(musicutil.note_num_to_freq(event.note))
+  local freq = musicutil.note_num_to_freq(event.note)
+  if event.type == "on" then
+    engine.start(event.note, freq)
+  elseif event.type == "off" then
+    engine.stop(event.note)
+  end
 end
 
 local pt = pattern_time.new()
@@ -143,15 +148,19 @@ pt.process = on_playback_event
 
 g.key = function(x, y, z)
   local note = grid_to_note(x, y)
+  local freq = musicutil.note_num_to_freq(note)
   if z == 1 then
-    engine.hz(musicutil.note_num_to_freq(note))
-    state.held[grid_key(x, y)] = true
+    engine.start(note, freq)
+    state.held[grid_key(x, y)] = note
     if state.recording then
-      pt:watch({ note = note })
+      pt:watch({ type = "on", note = note })
     end
   else
+    engine.stop(note)
     state.held[grid_key(x, y)] = nil
-    -- PolyPerc uses a percussive envelope; no explicit note-off needed
+    if state.recording then
+      pt:watch({ type = "off", note = note })
+    end
   end
   grid_redraw()
 end
@@ -167,6 +176,9 @@ function key(n, z)
   if n == 2 then
     if state.recording then
       state.recording = false
+      for _, held_note in pairs(state.held) do
+        pt:watch({ type = "off", note = held_note })
+      end
       pt:rec_stop()
     else
       pt:stop()
@@ -242,21 +254,21 @@ function init()
 
   params:add_number("base_oct", "Base Octave", 1, 6, 2)
   params:add_control("amp", "Amp", controlspec.new(0, 1, "lin", 0.01, 0.8, ""))
-  params:add_control("release", "Release", controlspec.new(0.1, 4, "exp", 0.01, 0.5, "s"))
+  params:add_control("attack", "Attack", controlspec.new(0.001, 1, "exp", 0.001, 0.005, "s"))
+  params:add_control("release", "Release", controlspec.new(0.01, 4, "exp", 0.01, 0.5, "s"))
   params:add_control("cutoff", "Cutoff", controlspec.new(200, 8000, "exp", 1, 2000, "hz"))
-  params:add_control("gain", "Gain", controlspec.new(1, 4, "lin", 0.1, 2, ""))
 
   params:set_action("amp", function(v)
     engine.amp(v)
+  end)
+  params:set_action("attack", function(v)
+    engine.attack(v)
   end)
   params:set_action("release", function(v)
     engine.release(v)
   end)
   params:set_action("cutoff", function(v)
     engine.cutoff(v)
-  end)
-  params:set_action("gain", function(v)
-    engine.gain(v)
   end)
 
   params:bang()
