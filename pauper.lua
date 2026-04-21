@@ -24,10 +24,10 @@ local pattern_time = require("lib/pattern_time")
 local ROW_INTERVAL = 5 -- semitones between rows (perfect 4th)
 local GRID_WIDTH = 16
 local GRID_HEIGHT = 8
+local C1_MIDI = 24 -- MIDI note number for C1; base of the lowest octave row
 
-local ROOT_NAMES = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" }
-
--- musicutil scale identifiers and display names are matched by index
+-- musicutil scale identifiers and short display names matched by index.
+-- Names must match musicutil.generate_scale expectations (lowercase).
 local SCALE_IDS = {
   "major",
   "natural minor",
@@ -62,19 +62,23 @@ local scale_classes = {}
 local state = {
   recording = false,
   playing = false,
-  -- [x * GRID_HEIGHT + y] = true when that grid key is held
-  held = {},
+  held = {}, -- [grid_key(x,y)] = true when that key is held
 }
 
 local redraw_clock -- clock coroutine id
 
 -- ---------------------------------------------------------------------------
--- Scale helpers
+-- Helpers
 -- ---------------------------------------------------------------------------
+
+-- Stable hash for a grid position; used as a table key for state.held.
+local function grid_key(x, y)
+  return x * GRID_HEIGHT + y
+end
 
 local function rebuild_scale()
   scale_classes = {}
-  -- params:get("root") returns 1-based index; convert to 0-based MIDI class
+  -- params:get("root") returns a 1-based index; convert to 0-based MIDI class
   local root = params:get("root") - 1
   local name = SCALE_IDS[params:get("scale")]
   for _, n in ipairs(musicutil.generate_scale(root, name, 1)) do
@@ -82,14 +86,10 @@ local function rebuild_scale()
   end
 end
 
--- ---------------------------------------------------------------------------
--- Note mapping
--- ---------------------------------------------------------------------------
-
 -- Returns the MIDI note number for grid position (x, y).
 -- y=1 is the top row (highest pitch); y=GRID_HEIGHT is the bottom (lowest).
 local function grid_to_note(x, y)
-  local base = 24 + (params:get("base_oct") - 1) * 12 + (params:get("root") - 1)
+  local base = C1_MIDI + (params:get("base_oct") - 1) * 12 + (params:get("root") - 1)
   return base + (GRID_HEIGHT - y) * ROW_INTERVAL + (x - 1)
 end
 
@@ -103,20 +103,22 @@ local function grid_redraw()
   if g.device == nil then
     return
   end
-  g:all(0)
+  -- Hoist params out of the 128-cell loop
   local root_class = params:get("root") - 1
+  local base = C1_MIDI + (params:get("base_oct") - 1) * 12 + root_class
+  g:all(0)
   for y = 1, GRID_HEIGHT do
     for x = 1, GRID_WIDTH do
-      local nc = grid_to_note(x, y) % 12
+      local nc = (base + (GRID_HEIGHT - y) * ROW_INTERVAL + (x - 1)) % 12
       local level
-      if state.held[x * GRID_HEIGHT + y] then
-        level = 15 -- currently pressed
+      if state.held[grid_key(x, y)] then
+        level = 15
       elseif nc == root_class then
-        level = 4 -- root note of scale
+        level = 4
       elseif scale_classes[nc] then
-        level = 2 -- in-scale note
+        level = 2
       else
-        level = 0 -- out of scale
+        level = 0
       end
       g:led(x, y, level)
     end
@@ -143,12 +145,12 @@ g.key = function(x, y, z)
   local note = grid_to_note(x, y)
   if z == 1 then
     engine.hz(musicutil.note_num_to_freq(note))
-    state.held[x * GRID_HEIGHT + y] = true
+    state.held[grid_key(x, y)] = true
     if state.recording then
       pt:watch({ note = note })
     end
   else
-    state.held[x * GRID_HEIGHT + y] = nil
+    state.held[grid_key(x, y)] = nil
     -- PolyPerc uses a percussive envelope; no explicit note-off needed
   end
   grid_redraw()
@@ -163,7 +165,6 @@ function key(n, z)
     return
   end
   if n == 2 then
-    -- Toggle recording. Starting a new recording clears any existing pattern.
     if state.recording then
       state.recording = false
       pt:rec_stop()
@@ -174,7 +175,6 @@ function key(n, z)
       state.recording = true
     end
   elseif n == 3 then
-    -- Toggle playback. Requires at least one recorded event.
     if state.playing then
       pt:stop()
       state.playing = false
@@ -192,12 +192,13 @@ end
 function enc(n, d)
   if n == 1 then
     params:delta("root", d)
+    rebuild_scale()
   elseif n == 2 then
     params:delta("scale", d)
+    rebuild_scale()
   elseif n == 3 then
     params:delta("base_oct", d)
   end
-  rebuild_scale()
   grid_redraw()
   redraw()
 end
@@ -213,7 +214,7 @@ function redraw()
 
   screen.level(10)
   screen.move(2, 22)
-  screen.text(ROOT_NAMES[params:get("root")] .. " " .. SCALE_DISPLAY[params:get("scale")])
+  screen.text(musicutil.NOTE_NAMES[params:get("root")] .. " " .. SCALE_DISPLAY[params:get("scale")])
   screen.move(2, 32)
   screen.text("oct " .. params:get("base_oct"))
 
@@ -236,8 +237,9 @@ end
 
 function init()
   params:add_separator("pauper_sep", "PAUPER")
-  params:add_option("root", "Root", ROOT_NAMES, 1)
+  params:add_option("root", "Root", musicutil.NOTE_NAMES, 1)
   params:add_option("scale", "Scale", SCALE_DISPLAY, 1)
+
   params:add_number("base_oct", "Base Octave", 1, 6, 2)
   params:add_control("amp", "Amp", controlspec.new(0, 1, "lin", 0.01, 0.8, ""))
   params:add_control("release", "Release", controlspec.new(0.1, 4, "exp", 0.01, 0.5, "s"))

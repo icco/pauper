@@ -1,13 +1,13 @@
 # pauper
 
-> bad piano. good patterns.
+bad piano. good patterns.
 
-pauper is a [norns](https://monome.org/docs/norns/) script for the 16×8 [monome grid](https://monome.org/grid/). it turns the grid into an isomorphic keyboard — where the same chord shape works at any position — and captures a single free-time looping pattern.
+pauper turns a 16×8 [monome grid](https://monome.org/grid/) into an isomorphic keyboard with a free-time pattern recorder. the same chord shape works anywhere on the grid — slide it to transpose, or stack fingers for chords.
 
 ## requirements
 
-- norns (update 240424 or later)
-- [grid](https://monome.org/grid/) 128 (16×8)
+- norns
+- grid 128 (16×8)
 
 ## install
 
@@ -17,107 +17,50 @@ from [maiden](https://monome.org/docs/norns/maiden/):
 ;install https://github.com/icco/pauper
 ```
 
-## the grid
+## controls
 
-the keyboard is **isomorphic**: every row is a **perfect 4th** (5 semitones) higher than the row below it. the same chord shape therefore works anywhere on the grid — slide it left/right to transpose, up/down to change voicing.
-
-```
-row 1 (top)   ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   highest
-row 2         ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
-row 3         ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
-row 4         ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
-row 5         ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
-row 6         ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
-row 7         ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·
-row 8 (bottom)·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·  ·   lowest
-              └─ each step right = +1 semitone ──────────────┘
-```
-
-**led brightness:**
-
-| brightness | meaning |
-|------------|---------|
-| bright (15) | key currently held |
-| dim (4) | root note of current scale |
-| faint (2) | in-scale note |
-| off (0) | out of scale |
-
-all keys are playable regardless of scale — the led dimness just helps you navigate.
-
-## norns keys
-
-| key | action |
-|-----|--------|
-| key2 | **record** — press to start recording, press again to stop |
-| key3 | **play** — press to loop the recorded pattern, press again to stop |
-
-recording a new pattern automatically stops any current playback. starting playback automatically stops recording.
-
-## norns encoders
-
-| encoder | action |
-|---------|--------|
-| enc1 | root note (C → C# → D … → B) |
+| input | action |
+|-------|--------|
+| grid | play notes (polyphonic) |
+| key2 | toggle record |
+| key3 | toggle playback (loops) |
+| enc1 | root note |
 | enc2 | scale |
-| enc3 | base octave (1–6) |
+| enc3 | base octave |
 
-changing the root or scale updates the led display immediately. it does **not** retune an in-progress recording — the recorded notes keep their original pitches.
+key2 starts a new recording and clears any previous pattern. key3 won't fire until at least one note has been recorded. you can play the grid while the pattern loops.
+
+## grid layout
+
+every row is a **perfect 4th** (5 semitones) above the row below it. every step right is +1 semitone. led brightness shows scale membership:
+
+- **15** — key held
+- **4** — root note
+- **2** — in-scale note
+- **0** — out of scale
 
 ## params
 
-open the norns params menu to find the **PAUPER** section:
+| param | range | default |
+|-------|-------|---------|
+| Root | C–B | C |
+| Scale | 9 modes | Major |
+| Base Octave | 1–6 | 2 |
+| Amp | 0–1 | 0.8 |
+| Release | 0.1–4s | 0.5s |
+| Cutoff | 200–8000 hz | 2000 hz |
+| Gain | 1–4 | 2 |
 
-| param | range | description |
-|-------|-------|-------------|
-| Root | C–B | root note for scale and led display |
-| Scale | 9 choices | scale used for led highlighting |
-| Base Octave | 1–6 | starting octave for the bottom row |
-| Amp | 0.0–1.0 | output amplitude |
-| Release | 0.1–4s | note decay time |
-| Cutoff | 200–8000 hz | moog filter cutoff frequency |
-| Gain | 1.0–4.0 | filter resonance |
+scales: Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, Locrian, Pentatonic Major, Pentatonic Minor.
 
-## available scales
+## references
 
-- Major, Minor
-- Dorian, Phrygian, Lydian, Mixolydian, Locrian
-- Pentatonic Major, Pentatonic Minor
-
-## recording a pattern
-
-1. press **key2** — screen shows `[ REC ]`
-2. play notes freely on the grid
-3. press **key2** — recording stops
-4. press **key3** — screen shows `[PLAY ]` — your pattern loops
-5. press **key3** again to stop
-
-only one pattern can be recorded. starting a new recording with **key2** clears the previous one.
-
-you can play notes on the grid while the pattern is looping — your live notes sound alongside the recorded ones.
-
-## norns screen
-
-```
-pauper
-C Major
-oct 2
-
-[ REC ]      ← current state: REC / PLAY / ---
-23 events    ← count of recorded note-on events
-```
-
-## default pitch range
-
-with Base Octave = 2 and Root = C, the grid spans:
-
-- bottom-left (1, 8): C2  (midi 24)
-- top-right (16, 1): D#6 (midi 87)
-
-roughly 5.3 octaves of chromatic range.
-
-## engine
-
-pauper uses norns' built-in **PolyPerc** engine: a pulse-wave oscillator through a Moog filter with a percussive envelope. voices are polyphonic and decay naturally — no explicit note-off is needed.
+- [norns scripting](https://monome.org/docs/norns/scripting/) — norns Lua API
+- [norns studies](https://monome.org/docs/norns/studies/) — grid, clock, engine, params tutorials
+- [musicutil](https://monome.org/docs/norns/reference/lib/musicutil) — scale generation and note conversion (`musicutil.NOTE_NAMES`, `musicutil.generate_scale`)
+- [pattern_time](https://monome.org/docs/norns/reference/lib/pattern_time) — free-time event recorder used for pattern capture and looping
+- [PolyPerc engine](https://monome.org/docs/norns/reference/engine) — built-in polyphonic pulse/filter synth
+- [norns tutorial thread](https://llllllll.co/t/norns-tutorial/23241) — community scripting guide
 
 ## license
 
