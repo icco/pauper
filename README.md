@@ -46,7 +46,7 @@ every row is a **perfect 4th** (5 semitones) above the row below it. every step 
 | Root | C–B | C |
 | Scale | 9 modes | Major |
 | Base Octave | 1–6 | 2 |
-| Amp | 0–1 | 0.8 |
+| Level | 0–1 | 0.8 |
 | Attack | 0.001–1s | 0.005s |
 | Release | 0.01–4s | 0.5s |
 | Cutoff | 200–8000 hz | 2000 hz |
