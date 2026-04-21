@@ -204,6 +204,7 @@ function key(n, z)
     else
       pt:stop()
       state.playing = false
+      pt:clear()
       pt:rec_start()
       state.recording = true
     end
