@@ -1,6 +1,5 @@
 -- pauper
 -- v1.0.0 @icco
--- llllllll.co/t/pauper
 --
 -- isomorphic grid piano
 -- with single-pattern recorder
