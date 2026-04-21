@@ -213,6 +213,11 @@ function key(n, z)
       pt:stop()
       state.playing = false
     elseif pt.count > 0 then
+      if state.recording then
+        for _, held_note in pairs(state.held) do
+          pt:watch({ type = "off", note = held_note })
+        end
+      end
       state.recording = false
       pt:rec_stop()
       pt.loop = 1
