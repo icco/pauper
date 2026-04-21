@@ -14,8 +14,8 @@
 
 engine.name = "PolyPerc"
 
-local musicutil = require "musicutil"
-local pattern_time = require "lib/pattern_time"
+local musicutil = require("musicutil")
+local pattern_time = require("lib/pattern_time")
 
 -- ---------------------------------------------------------------------------
 -- Constants
