@@ -183,6 +183,7 @@ g.key = function(x, y, z)
     end
   end
   grid_redraw()
+  redraw()
 end
 
 -- ---------------------------------------------------------------------------
@@ -240,41 +241,31 @@ function redraw()
   screen.font_face(1)
   screen.font_size(8)
 
-  -- Title
-  screen.level(15)
-  screen.move(2, 10)
-  screen.text("pauper")
-
-  -- Status indicator, right-aligned on same line as title
-  screen.level(15)
-  screen.move(126, 10)
-  if state.recording then
-    screen.text_right("[ REC ]")
-  elseif state.playing then
-    screen.text_right("[ PLAY ]")
-  else
-    screen.text_right("[ --- ]")
-  end
-
-  -- Scale and octave info
+  -- Left: scale and octave info
   screen.level(10)
-  screen.move(2, 22)
+  screen.move(2, 10)
   screen.text(musicutil.NOTE_NAMES[params:get("root")] .. " " .. SCALE_DISPLAY[params:get("scale")])
-  screen.move(2, 32)
+  screen.move(2, 20)
   screen.text("oct " .. params:get("base_oct"))
 
-  -- Note history: most recent at top, fading toward the bottom
-  local levels = { 15, 11, 7, 4, 2, 1 }
+  -- Right: note stream, most recent at top, fading down
+  local levels = { 15, 12, 8, 5, 3, 1 }
   for i = 1, math.min(#note_history, #levels) do
     screen.level(levels[i])
-    screen.move(2, 32 + i * 9 + 4)
-    screen.text(note_history[i])
+    screen.move(126, 1 + i * 9)
+    screen.text_right(note_history[i])
   end
 
-  -- Event count, subtle at bottom right
-  screen.level(3)
-  screen.move(126, 62)
-  screen.text_right(pt.count .. " ev")
+  -- Bottom left: status
+  screen.level(15)
+  screen.move(2, 62)
+  if state.recording then
+    screen.text("[ REC ]")
+  elseif state.playing then
+    screen.text("[ PLAY ]")
+  else
+    screen.text("[ --- ]")
+  end
 
   screen.update()
 end
