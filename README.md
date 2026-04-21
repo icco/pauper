@@ -35,9 +35,9 @@ key2 starts a new recording and clears any previous pattern. key3 won't fire unt
 every row is a **perfect 4th** (5 semitones) above the row below it. every step right is +1 semitone. led brightness shows scale membership:
 
 - **15** — key held
-- **4** — root note
-- **2** — in-scale note
-- **0** — out of scale
+- **9** — root note of current scale
+- **4** — in-scale note
+- **1** — out of scale
 
 ## params
 

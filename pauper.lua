@@ -114,11 +114,11 @@ local function grid_redraw()
       if state.held[grid_key(x, y)] then
         level = 15
       elseif nc == root_class then
-        level = 4
+        level = 9
       elseif scale_classes[nc] then
-        level = 2
+        level = 4
       else
-        level = 0
+        level = 1
       end
       g:led(x, y, level)
     end
