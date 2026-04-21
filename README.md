@@ -1,13 +1,13 @@
 # pauper
 
-bad piano. good patterns.
+A bad piano and recorder inspired by [earthsea](https://github.com/tehn/ash/blob/main/earthsea.lua) that runs in Norns.
 
 pauper turns a 16×8 [monome grid](https://monome.org/grid/) into an isomorphic keyboard with a free-time pattern recorder. the same chord shape works anywhere on the grid — slide it to transpose, or stack fingers for chords.
 
 ## requirements
 
 - norns
-- grid 128 (16×8)
+- grid (16×8)
 
 ## install
 
