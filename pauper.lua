@@ -65,6 +65,10 @@ local state = {
   held = {}, -- [grid_key(x,y)] = true when that key is held
 }
 
+-- Note history for display: most recent first, up to NOTE_HISTORY_MAX entries.
+local NOTE_HISTORY_MAX = 6
+local note_history = {}
+
 local redraw_clock -- clock coroutine id
 
 -- ---------------------------------------------------------------------------
@@ -74,6 +78,19 @@ local redraw_clock -- clock coroutine id
 -- Stable hash for a grid position; used as a table key for state.held.
 local function grid_key(x, y)
   return x * GRID_HEIGHT + y
+end
+
+-- Returns a display string like "C4" or "G#3" for a MIDI note number.
+local function note_display_name(note)
+  return musicutil.NOTE_NAMES[(note % 12) + 1] .. tostring(math.floor(note / 12) - 1)
+end
+
+-- Prepend a note name to the history list, trimming to NOTE_HISTORY_MAX.
+local function push_note_history(note)
+  table.insert(note_history, 1, note_display_name(note))
+  if #note_history > NOTE_HISTORY_MAX then
+    table.remove(note_history)
+  end
 end
 
 local function rebuild_scale()
@@ -134,6 +151,8 @@ local function on_playback_event(event)
   local freq = musicutil.note_num_to_freq(event.note)
   if event.type == "on" then
     engine.start(event.note, freq)
+    push_note_history(event.note)
+    redraw()
   elseif event.type == "off" then
     engine.stop(event.note)
   end
@@ -152,6 +171,7 @@ g.key = function(x, y, z)
   if z == 1 then
     engine.start(note, freq)
     state.held[grid_key(x, y)] = note
+    push_note_history(note)
     if state.recording then
       pt:watch({ type = "on", note = note })
     end
@@ -220,29 +240,41 @@ function redraw()
   screen.font_face(1)
   screen.font_size(8)
 
+  -- Title
   screen.level(15)
   screen.move(2, 10)
   screen.text("pauper")
 
+  -- Status indicator, right-aligned on same line as title
+  screen.level(15)
+  screen.move(126, 10)
+  if state.recording then
+    screen.text_right("[ REC ]")
+  elseif state.playing then
+    screen.text_right("[ PLAY ]")
+  else
+    screen.text_right("[ --- ]")
+  end
+
+  -- Scale and octave info
   screen.level(10)
   screen.move(2, 22)
   screen.text(musicutil.NOTE_NAMES[params:get("root")] .. " " .. SCALE_DISPLAY[params:get("scale")])
   screen.move(2, 32)
   screen.text("oct " .. params:get("base_oct"))
 
-  screen.level(15)
-  screen.move(2, 50)
-  if state.recording then
-    screen.text("[ REC ]")
-  elseif state.playing then
-    screen.text("[PLAY ]")
-  else
-    screen.text("[ --- ]")
+  -- Note history: most recent at top, fading toward the bottom
+  local levels = { 15, 11, 7, 4, 2, 1 }
+  for i = 1, math.min(#note_history, #levels) do
+    screen.level(levels[i])
+    screen.move(2, 32 + i * 9 + 4)
+    screen.text(note_history[i])
   end
 
-  screen.level(5)
-  screen.move(2, 60)
-  screen.text(pt.count .. " events")
+  -- Event count, subtle at bottom right
+  screen.level(3)
+  screen.move(126, 62)
+  screen.text_right(pt.count .. " ev")
 
   screen.update()
 end
